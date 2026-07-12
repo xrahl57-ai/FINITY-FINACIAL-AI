@@ -1,0 +1,214 @@
+{
+  "accounts": [
+    {
+      "id": "acc-bank",
+      "name": "Bank Account (Checking)",
+      "type": "ASSET",
+      "code": "1010",
+      "balance": 0,
+      "description": "Primary operating bank checking account",
+      "isSystem": true
+    },
+    {
+      "id": "acc-cash",
+      "name": "Petty Cash",
+      "type": "ASSET",
+      "code": "1020",
+      "balance": 0,
+      "description": "Cash on hand for minor daily expenses",
+      "isSystem": true
+    },
+    {
+      "id": "acc-ar",
+      "name": "Accounts Receivable",
+      "type": "ASSET",
+      "code": "1100",
+      "balance": 0,
+      "description": "Outstanding funds owed by customers",
+      "isSystem": true
+    },
+    {
+      "id": "acc-inventory",
+      "name": "Inventory",
+      "type": "ASSET",
+      "code": "1200",
+      "balance": 0,
+      "description": "Valuation of stock on hand",
+      "isSystem": true
+    },
+    {
+      "id": "acc-ap",
+      "name": "Accounts Payable",
+      "type": "LIABILITY",
+      "code": "2010",
+      "balance": 0,
+      "description": "Owed money to suppliers and vendors",
+      "isSystem": true
+    },
+    {
+      "id": "acc-tax",
+      "name": "Sales Tax Payable",
+      "type": "LIABILITY",
+      "code": "2200",
+      "balance": 0,
+      "description": "Collected sales tax to be paid to govt",
+      "isSystem": false
+    },
+    {
+      "id": "acc-payroll",
+      "name": "Payroll Liabilities",
+      "type": "LIABILITY",
+      "code": "2300",
+      "balance": 0,
+      "description": "Accrued payroll and benefit liabilities",
+      "isSystem": false
+    },
+    {
+      "id": "acc-equity",
+      "name": "Owner's Equity (Capital)",
+      "type": "EQUITY",
+      "code": "3000",
+      "balance": 0,
+      "description": "Initial and subsequent capital contributions",
+      "isSystem": true
+    },
+    {
+      "id": "acc-retained",
+      "name": "Retained Earnings",
+      "type": "EQUITY",
+      "code": "3100",
+      "balance": 0,
+      "description": "Accumulated undistributed net profits",
+      "isSystem": true
+    },
+    {
+      "id": "acc-revenue",
+      "name": "Service Revenue",
+      "type": "REVENUE",
+      "code": "4010",
+      "balance": 0,
+      "description": "Earned income from core services",
+      "isSystem": true
+    },
+    {
+      "id": "acc-sales",
+      "name": "Product Sales",
+      "type": "REVENUE",
+      "code": "4020",
+      "balance": 0,
+      "description": "Earned income from inventory sales",
+      "isSystem": false
+    },
+    {
+      "id": "acc-rent",
+      "name": "Rent Expense",
+      "type": "EXPENSE",
+      "code": "5010",
+      "balance": 0,
+      "description": "Office lease payments",
+      "isSystem": true
+    },
+    {
+      "id": "acc-salaries",
+      "name": "Salaries & Wages Expense",
+      "type": "EXPENSE",
+      "code": "5020",
+      "balance": 0,
+      "description": "Employee compensation",
+      "isSystem": true
+    },
+    {
+      "id": "acc-utilities",
+      "name": "Utilities Expense",
+      "type": "EXPENSE",
+      "code": "5030",
+      "balance": 0,
+      "description": "Electricity, internet, and phone bills",
+      "isSystem": false
+    },
+    {
+      "id": "acc-marketing",
+      "name": "Advertising & Marketing",
+      "type": "EXPENSE",
+      "code": "5040",
+      "balance": 0,
+      "description": "Promotions, ads, and sponsorships",
+      "isSystem": false
+    },
+    {
+      "id": "acc-software",
+      "name": "Software & SaaS Subscriptions",
+      "type": "EXPENSE",
+      "code": "5050",
+      "balance": 0,
+      "description": "Cloud software, CRM, and analytics tools",
+      "isSystem": false
+    }
+  ],
+  "transactions": [],
+  "journalEntries": [],
+  "invoices": [],
+  "bills": [],
+  "products": [],
+  "partners": [],
+  "projects": [],
+  "budgets": [],
+  "receipts": [],
+  "bankConnections": [],
+  "wallets": [],
+  "paymentGateways": [],
+  "activePayments": [],
+  "auditLogs": [
+    {
+      "id": "log-clear-1783857048246",
+      "timestamp": "2026-07-12T11:50:48.246Z",
+      "action": "Database Clear",
+      "entityType": "Database",
+      "entityId": "all",
+      "details": "Database cleared successfully. Starting with an empty slate.",
+      "user": "System OS"
+    }
+  ],
+  "accountingPeriod": "active",
+  "fiscalYearClosed": false,
+  "exchangeRates": {
+    "USD": 1,
+    "EUR": 1.08,
+    "GBP": 1.28,
+    "CAD": 0.73,
+    "AUD": 0.67,
+    "KES": 0.0078
+  },
+  "isOnboarded": true,
+  "personalProfile": {
+    "name": "Rahl",
+    "country": "Kenya",
+    "currency": "KES",
+    "timezone": "Africa/Nairobi",
+    "language": "English (KE)",
+    "goals": "Expense Tracking & Wealth Management",
+    "onboardedAt": "2026-07-12T11:48:14.510Z"
+  },
+  "companyProfile": {
+    "name": "Finity Kenya Ltd",
+    "legalName": "Finity Kenya Limited",
+    "registrationNumber": "CPR/2026/184910",
+    "businessType": "Private Limited Company",
+    "industry": "FinTech / Financial Services",
+    "companySize": "11-50",
+    "website": "finity.co.ke",
+    "country": "Kenya",
+    "city": "Nairobi",
+    "address": "Galana Plaza, Galana Road, Kilimani",
+    "timezone": "Africa/Nairobi",
+    "language": "English (KE)",
+    "taxNumber": "P051234567Z",
+    "taxSettings": "Standard VAT (16%)",
+    "onboardedAt": "2026-07-12T11:48:14.510Z"
+  },
+  "userCredentials": {
+    "email": "albertnyasimi27@gmail.com",
+    "password": "",
+    "fullName": "Rahl"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Finity Agent",
+  "description": "Finity Agent is an AI-powered financial operations platform with natural language bookkeeping, dynamic ledger accounting, invoicing, document extraction, bank connections, and deep financial analysis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
