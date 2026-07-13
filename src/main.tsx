@@ -1,3 +1,4 @@
+import "./lib/fetchWrapper.ts";
 import React, { Component, ErrorInfo, ReactNode, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";

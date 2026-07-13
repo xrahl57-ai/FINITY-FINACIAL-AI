@@ -29,7 +29,10 @@ import {
   Globe,
   Command,
   TrendingUp,
-  FolderOpen
+  FolderOpen,
+  AlertCircle,
+  WifiOff,
+  Server
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { FinityState, AccountType } from "./types";
@@ -53,6 +56,14 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("Finity Agent");
   const [activeReportId, setActiveReportId] = useState("bs");
   const [isLoading, setIsLoading] = useState(true);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [serverUrl, setServerUrl] = useState(() => {
+    return localStorage.getItem("finity-api-url") || "https://ais-pre-ukieqcyvafzk2w56lzifwb-230947666768.europe-west2.run.app";
+  });
+  const [showConfig, setShowConfig] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [customUrlInput, setCustomUrlInput] = useState("");
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [isConsoleOpen, setIsConsoleOpen] = useState(true);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -94,21 +105,152 @@ export default function App() {
     };
   }, [isLoading, state]);
 
-  // Fetch the financial state from the server on mount
-  const fetchState = async () => {
+  // Setup a fallback seed state for offline mode
+  const setupOfflineSeed = () => {
+    console.log("[Finity OS] Seeding complete offline state locally...");
+    const seed: FinityState = {
+      accounts: [
+        { id: "acc-bank", name: "Operating Bank (Checking)", type: AccountType.ASSET, code: "1010", balance: 45000, description: "Primary operating checking account", isSystem: true },
+        { id: "acc-cash", name: "Petty Cash Wallet", type: AccountType.ASSET, code: "1020", balance: 2500, description: "Cash on hand for minor daily expenses", isSystem: true },
+        { id: "acc-ar", name: "Accounts Receivable (A/R)", type: AccountType.ASSET, code: "1100", balance: 12500, description: "Outstanding client invoicing", isSystem: true },
+        { id: "acc-inventory", name: "Product Inventory Asset", type: AccountType.ASSET, code: "1200", balance: 18000, description: "Valuation of commercial inventory", isSystem: true },
+        { id: "acc-ap", name: "Accounts Payable (A/P)", type: AccountType.LIABILITY, code: "2010", balance: 6400, description: "Owed funds to supplier partners", isSystem: true },
+        { id: "acc-tax", name: "Sales Tax Liability", type: AccountType.LIABILITY, code: "2200", balance: 1200, description: "Collected sales tax payable to authority", isSystem: true },
+        { id: "acc-equity", name: "Retained Earnings", type: AccountType.EQUITY, code: "3000", balance: 61400, description: "Accumulated operational reserves", isSystem: true },
+        { id: "acc-revenue", name: "Core Product Sales", type: AccountType.REVENUE, code: "4000", balance: 28500, description: "Main stream revenue from commercial channels", isSystem: true },
+        { id: "acc-rent", name: "Office Leasing Expense", type: AccountType.EXPENSE, code: "5010", balance: 4500, description: "Office rental and workspace subscription expenses", isSystem: true },
+        { id: "acc-payroll", name: "Salaries & Payroll", type: AccountType.EXPENSE, code: "5020", balance: 12000, description: "Salaries paid to company team members", isSystem: true },
+        { id: "acc-marketing", name: "Marketing & Growth", type: AccountType.EXPENSE, code: "5030", balance: 3500, description: "Acquisition and search engine marketing costs", isSystem: true },
+        { id: "acc-hosting", name: "AWS Cloud Infrastructure", type: AccountType.EXPENSE, code: "5040", balance: 1200, description: "Cloud computing and network storage overheads", isSystem: true },
+      ],
+      transactions: [
+        { id: "tx-ob-1", date: "2026-07-01", description: "Initial Equity Contribution", accountId: "acc-bank", offsetAccountId: "acc-equity", amount: 45000, category: "Equity", type: "income", status: "posted" },
+        { id: "tx-ob-2", date: "2026-07-02", description: "Office Space Lease Payment", accountId: "acc-bank", offsetAccountId: "acc-rent", amount: -2500, category: "Rent", type: "expense", status: "posted" },
+        { id: "tx-ob-3", date: "2026-07-03", description: "Stripe Sales Payout Batch", accountId: "acc-bank", offsetAccountId: "acc-revenue", amount: 8400, category: "Sales", type: "income", status: "posted" },
+        { id: "tx-ob-4", date: "2026-07-04", description: "Employee Payroll Allocation", accountId: "acc-bank", offsetAccountId: "acc-payroll", amount: -6000, category: "Payroll", type: "expense", status: "posted" },
+      ],
+      journalEntries: [],
+      invoices: [],
+      bills: [],
+      products: [],
+      partners: [
+        { id: "partner-ob-owner", name: "Business Owner", type: "employee", email: "admin@finity.io", phone: "", address: "", balance: 0 }
+      ],
+      projects: [],
+      budgets: [],
+      receipts: [],
+      bankConnections: [
+        {
+          id: "bc-ob-1",
+          bankName: "Finity Operating Checking",
+          accountNumber: "•••• 4422",
+          balance: 45000,
+          lastSynced: new Date().toISOString(),
+          transactions: [
+            { id: "btx-ob-1", date: "2026-07-05", description: "Customer Wire Settlement", amount: 4500, reconciled: false },
+            { id: "btx-ob-2", date: "2026-07-06", description: "Office Utility Payment", amount: -350, reconciled: false },
+            { id: "btx-ob-3", date: "2026-07-07", description: "Adobe CC Software Sub", amount: -85, reconciled: true },
+          ],
+        }
+      ],
+      wallets: [
+        { id: "wal-ob-usd", name: "Operating USD Wallet", currency: "USD", balance: 10000, provider: "Finity Core", lastUpdated: new Date().toISOString() }
+      ],
+      paymentGateways: [
+        { id: "pg-ob-stripe", name: "Stripe Connect Portal", status: "connected", environment: "sandbox", credentialsType: "API Key", lastPing: new Date().toISOString() }
+      ],
+      activePayments: [],
+      exchangeRates: { "USD": 1.0, "EUR": 1.08, "GBP": 1.28, "CAD": 1.38, "AUD": 1.51 },
+      isOnboarded: true, // Auto-onboard local offline mode to give instant utility
+      companyProfile: {
+        name: "Finity Offline Workspace",
+        legalName: "Finity Local Systems Ltd",
+        businessType: "Corporation",
+        industry: "Technology",
+        companySize: "1-10",
+        country: "United States",
+        timezone: "UTC",
+        language: "English",
+        onboardedAt: new Date().toISOString(),
+      },
+      auditLogs: [
+        { id: "log-local-seed-1", timestamp: new Date().toISOString(), action: "Local Workspace Init", entityType: "Database", entityId: "local", details: "Finity local offline ledger initialized successfully.", user: "Local System OS" }
+      ],
+    };
+    localStorage.setItem("finity-local-state", JSON.stringify(seed));
+    setState(seed);
+    setIsOfflineMode(true);
+  };
+
+  // Fetch the financial state from the server with timeout and local fallbacks
+  const fetchState = async (customUrl?: string) => {
     setIsLoading(true);
+    setConnectionError(null);
+    setIsTestingConnection(true);
+
+    const targetUrl = customUrl !== undefined ? customUrl : serverUrl;
+    console.log(`[Finity OS] Resilient Startup: Connecting to server at: ${targetUrl || "Relative origin"}`);
+
+    if (customUrl !== undefined) {
+      localStorage.setItem("finity-api-url", customUrl.trim());
+      setServerUrl(customUrl.trim());
+    }
+
     const startTime = Date.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 4500); // 4.5s connection timeout
+
     try {
-      const response = await fetch("/api/state");
+      const response = await fetch("/api/state", { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Server response error: HTTP ${response.status}`);
+      }
+
       const data = await response.json();
-      setState(data.state || data);
-    } catch (err) {
-      console.error("Error loading financial ledger state:", err);
+      const serverState = data.state || data;
+
+      if (!serverState || typeof serverState !== "object") {
+        throw new Error("Invalid schema structure returned from server.");
+      }
+
+      // Sync and backup to local storage
+      localStorage.setItem("finity-local-state", JSON.stringify(serverState));
+      
+      setState(serverState);
+      setIsOfflineMode(false);
+      console.log("[Finity OS] Connection successful. Financial ledger state synced.");
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      const errMsg = err.name === "AbortError" ? "Connection timeout (4500ms exceeded)" : String(err.message || err);
+      console.warn(`[Finity OS] API Connection unsuccessful: ${errMsg}. Initiating offline session restoration...`);
+      setConnectionError(errMsg);
+
+      // Restore session from localStorage backup
+      const localBackup = localStorage.getItem("finity-local-state");
+      if (localBackup) {
+        try {
+          const parsed = JSON.parse(localBackup);
+          setState(parsed);
+          setIsOfflineMode(true);
+          console.log("[Finity OS] Resilient Startup: Restored previous financial state from Local Storage.");
+        } catch (parseErr) {
+          console.error("[Finity OS] Local Storage backup is corrupted:", parseErr);
+          setupOfflineSeed();
+        }
+      } else {
+        // No backup exists. Load standard seed locally.
+        setupOfflineSeed();
+      }
     } finally {
+      setIsTestingConnection(false);
       const elapsed = Date.now() - startTime;
-      const minLoadingMs = 200; // Instant loading
+      const minLoadingMs = 800; // Visual buffer
       if (elapsed < minLoadingMs) {
-        await new Promise(resolve => setTimeout(resolve, minLoadingMs - elapsed));
+        await new Promise((resolve) => setTimeout(resolve, minLoadingMs - elapsed));
       }
       setIsLoading(false);
     }
@@ -131,6 +273,24 @@ export default function App() {
 
   const handleStateUpdate = (newState: FinityState) => {
     setState(newState);
+    // Persist to local storage for offline support
+    localStorage.setItem("finity-local-state", JSON.stringify(newState));
+
+    // If online, perform background sync to server database
+    if (!isOfflineMode) {
+      console.log("[Finity OS] Background Sync: Syncing state update to server...");
+      fetch("/api/state/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: newState })
+      }).then(res => {
+        if (!res.ok) {
+          console.warn("[Finity OS] Background Sync server responded with an error");
+        }
+      }).catch(err => {
+        console.warn("[Finity OS] Background Sync failed (will retry next save):", err);
+      });
+    }
   };
 
   const handleResetOnboarding = async () => {
@@ -149,6 +309,8 @@ export default function App() {
   };
 
   if (isLoading || !state) {
+    const isOfflineAvailable = !!localStorage.getItem("finity-local-state");
+
     return (
       <div className={`min-h-screen ${isDarkMode ? "" : "light-theme"} bg-app-bg text-text-main flex flex-col items-center justify-center p-6 relative overflow-hidden select-none transition-colors duration-500`} id="app-loading-screen">
         {/* Dynamic ambient radial gradients */}
@@ -167,68 +329,158 @@ export default function App() {
             f.
           </div>
 
-          {/* Concentric Dual-Ring Gold Spinner */}
-          <div className="relative w-24 h-24 flex items-center justify-center mb-8">
-            <motion.div
-              className="absolute inset-0 rounded-full border-2 border-dashed border-brand-gold/40"
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
-            />
-            <motion.div
-              className="absolute inset-2.5 rounded-full border-2 border-t-brand-gold border-r-transparent border-b-transparent border-l-transparent"
-              animate={{ rotate: -360 }}
-              transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-            />
-            <motion.div
-              className="w-10 h-10 rounded-full bg-brand-gold-light border border-brand-gold/25 flex items-center justify-center"
-              animate={{ scale: [0.92, 1.08, 0.92] }}
-              transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-            >
-              <Sparkles size={16} className="text-brand-gold animate-pulse" />
-            </motion.div>
-          </div>
+          {connectionError ? (
+            // Connection Error / Config UI
+            <div className="w-full flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full bg-brand-gold/10 border border-brand-gold/30 flex items-center justify-center mb-6">
+                <WifiOff size={28} className="text-brand-gold animate-bounce" />
+              </div>
+              
+              <h3 className="font-sans font-extrabold text-text-main text-lg mb-2 tracking-tight uppercase">HANDSHAKE FAILED</h3>
+              <p className="font-mono text-[10px] text-brand-gold font-bold uppercase tracking-widest bg-brand-gold/10 border border-brand-gold/20 px-3 py-1 rounded-full mb-4">
+                SECURE NETWORK TIMEOUT
+              </p>
 
-          <h3 className="font-sans font-extrabold text-text-main text-lg mb-1.5 tracking-tight uppercase">Finity OS</h3>
-          <span className="font-mono text-[9px] text-brand-gold font-bold uppercase tracking-widest bg-brand-gold-light border border-brand-gold/20 px-3 py-1 rounded-full mb-6">
-            SECURE INTEL CORE v1.0
-          </span>
-          
-          <div className="h-8 overflow-hidden relative w-full mb-6 flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={loadingStep}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="font-mono text-xs text-text-muted font-medium"
-              >
-                {loadingMessages[loadingStep]}
-              </motion.p>
-            </AnimatePresence>
-          </div>
+              <div className="bg-hover-bg/40 border border-border-subtle rounded-2xl p-4 w-full mb-6 text-left max-h-32 overflow-y-auto">
+                <span className="font-mono text-[9px] uppercase font-bold text-text-muted block mb-1">Error Diagnostics:</span>
+                <p className="font-mono text-xs text-brand-red font-medium leading-relaxed break-all">
+                  {connectionError}
+                </p>
+              </div>
 
-          {/* Premium Slick Progress Bar */}
-          <div className="w-full bg-border-subtle rounded-full h-1 overflow-hidden mb-6">
-            <motion.div 
-              className="bg-brand-gold h-full rounded-full"
-              initial={{ width: "3%" }}
-              animate={{ 
-                width: ["8%", "33%", "61%", "88%", "97%"],
-              }}
-              transition={{
-                duration: 8,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
-            />
-          </div>
+              {/* Server URL Config Form */}
+              <div className="w-full text-left space-y-2 mb-6">
+                <label className="font-mono text-[9px] uppercase font-bold text-text-muted flex items-center gap-1.5">
+                  <Server size={10} className="text-brand-gold" />
+                  API Server Node Address
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customUrlInput}
+                    onChange={(e) => setCustomUrlInput(e.target.value)}
+                    placeholder="https://your-finity-server.run.app"
+                    className="flex-1 px-3.5 py-2 rounded-xl bg-hover-bg/60 border border-border-subtle focus:outline-none focus:border-brand-gold/50 text-xs text-text-main font-mono placeholder:text-text-muted/50"
+                  />
+                  <button
+                    onClick={() => {
+                      setCustomUrlInput("https://ais-pre-ukieqcyvafzk2w56lzifwb-230947666768.europe-west2.run.app");
+                    }}
+                    className="px-2.5 py-2 rounded-xl bg-hover-bg border border-border-subtle text-[10px] font-mono text-text-muted hover:text-text-main transition"
+                    title="Reset to Default"
+                  >
+                    Default
+                  </button>
+                </div>
+              </div>
 
-          <div className="flex items-center gap-2 justify-center font-mono text-[9px] text-brand-emerald bg-brand-emerald/10 border border-brand-emerald/20 px-3 py-1.5 rounded-xl">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-pulse" />
-            SOC-2 TYPE II ENCRYPTION PROTOCOL
-          </div>
+              {/* Action Buttons */}
+              <div className="w-full space-y-2.5">
+                <button
+                  onClick={() => fetchState(customUrlInput)}
+                  disabled={isTestingConnection}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-brand-primary text-brand-gold hover:bg-brand-primary-light border border-brand-gold/30 font-semibold text-xs transition uppercase tracking-wider font-sans active:scale-98 disabled:opacity-50"
+                >
+                  {isTestingConnection ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin text-brand-gold" />
+                      Authenticating Node...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCcw size={14} className="text-brand-gold" />
+                      Retry Secure Handshake
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (isOfflineAvailable) {
+                      const localBackup = localStorage.getItem("finity-local-state");
+                      if (localBackup) {
+                        setState(JSON.parse(localBackup));
+                        setIsOfflineMode(true);
+                        setIsLoading(false);
+                      }
+                    } else {
+                      setupOfflineSeed();
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="w-full py-3 px-4 rounded-xl bg-hover-bg/80 hover:bg-hover-bg text-text-main border border-border-subtle font-semibold text-xs transition uppercase tracking-wider font-sans active:scale-98"
+                >
+                  {isOfflineAvailable ? "Continue Offline (Local Storage)" : "Generate Local Offline Database"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Standard loading spinner layout
+            <>
+              {/* Concentric Dual-Ring Gold Spinner */}
+              <div className="relative w-24 h-24 flex items-center justify-center mb-8">
+                <motion.div
+                  className="absolute inset-0 rounded-full border-2 border-dashed border-brand-gold/40"
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
+                />
+                <motion.div
+                  className="absolute inset-2.5 rounded-full border-2 border-t-brand-gold border-r-transparent border-b-transparent border-l-transparent"
+                  animate={{ rotate: -360 }}
+                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                />
+                <motion.div
+                  className="w-10 h-10 rounded-full bg-brand-gold-light border border-brand-gold/25 flex items-center justify-center"
+                  animate={{ scale: [0.92, 1.08, 0.92] }}
+                  transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                >
+                  <Sparkles size={16} className="text-brand-gold animate-pulse" />
+                </motion.div>
+              </div>
+
+              <h3 className="font-sans font-extrabold text-text-main text-lg mb-1.5 tracking-tight uppercase">Finity OS</h3>
+              <span className="font-mono text-[9px] text-brand-gold font-bold uppercase tracking-widest bg-brand-gold-light border border-brand-gold/20 px-3 py-1 rounded-full mb-6">
+                SECURE INTEL CORE v1.0
+              </span>
+              
+              <div className="h-8 overflow-hidden relative w-full mb-6 flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={loadingStep}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.35, ease: "easeInOut" }}
+                    className="font-mono text-xs text-text-muted font-medium"
+                  >
+                    {loadingMessages[loadingStep]}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+
+              {/* Premium Slick Progress Bar */}
+              <div className="w-full bg-border-subtle rounded-full h-1 overflow-hidden mb-6">
+                <motion.div 
+                  className="bg-brand-gold h-full rounded-full"
+                  initial={{ width: "3%" }}
+                  animate={{ 
+                    width: ["8%", "33%", "61%", "88%", "97%"],
+                  }}
+                  transition={{
+                    duration: 8,
+                    ease: "easeInOut",
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center gap-2 justify-center font-mono text-[9px] text-brand-emerald bg-brand-emerald/10 border border-brand-emerald/20 px-3 py-1.5 rounded-xl">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-pulse" />
+                SOC-2 TYPE II ENCRYPTION PROTOCOL
+              </div>
+            </>
+          )}
         </motion.div>
       </div>
     );
@@ -637,10 +889,35 @@ export default function App() {
           {/* Right portion: Server connection status + Theme + Agent console toggle */}
           <div className="flex items-center gap-3">
             {/* Quick stats indicator */}
-            <div className="hidden lg:flex items-center gap-2 font-mono text-[9px] font-bold text-brand-emerald bg-brand-emerald/8 border border-brand-emerald/15 px-3 py-1.5 rounded-xl" id="db-status-badge">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-pulse" />
-              <span>CONNECTED: FINITY OS PORT 3000</span>
-            </div>
+            {isOfflineMode ? (
+              <button 
+                onClick={() => {
+                  setCustomUrlInput(serverUrl);
+                  setConnectionError(null);
+                  setShowConfig(true);
+                }}
+                className="hidden lg:flex items-center gap-2 font-mono text-[9px] font-bold text-brand-gold bg-brand-gold/10 border border-brand-gold/20 px-3 py-1.5 rounded-xl hover:bg-brand-gold/15 transition animate-pulse text-left cursor-pointer" 
+                id="offline-status-badge"
+                title="Running in Local Offline Mode. Click to configure connection settings."
+              >
+                <WifiOff size={11} className="text-brand-gold shrink-0" />
+                <span>OFFLINE MODE (LOCAL)</span>
+              </button>
+            ) : (
+              <button 
+                onClick={() => {
+                  setCustomUrlInput(serverUrl);
+                  setConnectionError(null);
+                  setShowConfig(true);
+                }}
+                className="hidden lg:flex items-center gap-2 font-mono text-[9px] font-bold text-brand-emerald bg-brand-emerald/8 border border-brand-emerald/15 px-3 py-1.5 rounded-xl hover:bg-brand-emerald/12 transition text-left cursor-pointer" 
+                id="db-status-badge"
+                title="Connected to Finity Cloud Server. Click to view configuration."
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-pulse shrink-0" />
+                <span>ONLINE CLOUD SECURE</span>
+              </button>
+            )}
 
             {/* Simple Light/Dark Switch inside Header for mobile/compact viewport */}
             <button
@@ -811,6 +1088,153 @@ export default function App() {
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={setIsSidebarCollapsed}
       />
+
+      {/* Dynamic Server Connection Config Modal */}
+      {showConfig && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 z-50 animate-fade-in" id="server-config-modal">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card-bg border border-border-subtle rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
+          >
+            <button 
+              onClick={() => setShowConfig(false)}
+              className="absolute top-5 right-5 p-2 rounded-xl text-text-muted hover:text-text-main hover:bg-hover-bg transition cursor-pointer"
+              id="close-config-modal-btn"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-brand-primary/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold">
+                <Server size={18} />
+              </div>
+              <div>
+                <h3 className="font-sans font-black text-text-main text-sm md:text-base tracking-tight leading-none">Connection Settings</h3>
+                <span className="font-mono text-[8px] uppercase font-bold text-brand-gold mt-1 tracking-widest block">Finity Ledger Node</span>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              {/* Current Status */}
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-hover-bg/40 border border-border-subtle">
+                <span className="font-sans text-xs text-text-muted font-medium">Core Node Status:</span>
+                {isOfflineMode ? (
+                  <div className="flex items-center gap-1.5 text-brand-gold font-mono text-[10px] font-bold uppercase bg-brand-gold/10 px-2.5 py-1 rounded-lg">
+                    <WifiOff size={11} />
+                    Offline (Local)
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-brand-emerald font-mono text-[10px] font-bold uppercase bg-brand-emerald/10 px-2.5 py-1 rounded-lg">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-pulse" />
+                    Online Cloud
+                  </div>
+                )}
+              </div>
+
+              {/* Endpoint Input */}
+              <div className="space-y-2">
+                <label className="font-mono text-[9px] uppercase font-bold text-text-muted flex items-center gap-1.5">
+                  Server Endpoint Address
+                </label>
+                <input
+                  type="text"
+                  value={customUrlInput}
+                  onChange={(e) => setCustomUrlInput(e.target.value)}
+                  placeholder="https://your-server-domain.run.app"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-hover-bg border border-border-subtle focus:outline-none focus:border-brand-gold/50 text-xs text-text-main font-mono placeholder:text-text-muted/40"
+                />
+                <span className="text-[10px] text-text-muted font-sans leading-normal block">
+                  Relative API calls are proxied through this server. Mobile applications must use fully qualified domains to resolve server-side endpoints.
+                </span>
+              </div>
+
+              {/* Test diagnostics */}
+              {connectionError && (
+                <div className="p-3.5 rounded-2xl bg-brand-red/5 border border-brand-red/10 text-left max-h-24 overflow-y-auto">
+                  <span className="font-mono text-[9px] font-bold text-brand-red uppercase block mb-0.5">Handshake Error:</span>
+                  <p className="font-mono text-[10px] text-brand-red leading-normal break-all">{connectionError}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  setCustomUrlInput("https://ais-pre-ukieqcyvafzk2w56lzifwb-230947666768.europe-west2.run.app");
+                  setConnectionError(null);
+                }}
+                className="py-2.5 px-4 rounded-xl bg-hover-bg hover:bg-border-subtle text-xs font-semibold text-text-main border border-border-subtle transition active:scale-95 text-center cursor-pointer"
+              >
+                Reset Default
+              </button>
+
+              <button
+                onClick={async () => {
+                  setIsTestingConnection(true);
+                  setConnectionError(null);
+                  try {
+                    // Temporarily write the custom URL to localStorage
+                    const normalizedUrl = customUrlInput.trim().replace(/\/$/, "");
+                    localStorage.setItem("finity-api-url", normalizedUrl);
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3500);
+                    
+                    const testUrl = `${normalizedUrl}/api/state`;
+                    const res = await fetch(testUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+
+                    if (!res.ok) {
+                      throw new Error(`Server returned HTTP ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    if (data && typeof data === "object") {
+                      setServerUrl(normalizedUrl);
+                      setIsOfflineMode(false);
+                      setState(data.state || data);
+                      localStorage.setItem("finity-local-state", JSON.stringify(data.state || data));
+                      setShowConfig(false);
+                      console.log("[Finity OS] Tested and configured server URL successfully.");
+                    } else {
+                      throw new Error("Invalid structure returned from connection test");
+                    }
+                  } catch (err: any) {
+                    console.error("[Finity OS] Tested URL handshake failed:", err);
+                    setConnectionError(err.message || String(err));
+                    // Revert to original server URL
+                    localStorage.setItem("finity-api-url", serverUrl);
+                  } finally {
+                    setIsTestingConnection(false);
+                  }
+                }}
+                disabled={isTestingConnection}
+                className="py-2.5 px-4 rounded-xl bg-brand-primary text-brand-gold hover:bg-brand-primary-light border border-brand-gold/30 text-xs font-semibold transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isTestingConnection ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin text-brand-gold" />
+                    Testing...
+                  </>
+                ) : (
+                  "Apply & Sync"
+                )}
+              </button>
+
+              {isOfflineMode && (
+                <button
+                  onClick={() => setShowConfig(false)}
+                  className="col-span-2 py-2.5 px-4 rounded-xl bg-hover-bg/60 hover:bg-hover-bg text-xs font-semibold text-text-muted border border-border-subtle/80 transition active:scale-95 text-center cursor-pointer"
+                >
+                  Continue Running Offline
+                </button>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
