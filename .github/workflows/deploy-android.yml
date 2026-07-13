@@ -73,18 +73,21 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # Step 9: Set up Gradle Action with Subdirectory Configuration
-      # This handles optimal caching of Gradle dependencies using the correct build directory.
+      # Step 9: Set up Gradle Action
+      # This handles optimal caching of Gradle dependencies.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          build-root-directory: android
+
+      # Step 9.5: Validate Gradle Wrapper
+      # Verifies the SHA-256 checksum of the Gradle Wrapper JAR against official checksums
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
 
       # Step 10: Build Android Release APK
       - name: Build Android Release APK
+        working-directory: android
         run: |
           echo "Starting native Gradle release build..."
-          cd android
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
