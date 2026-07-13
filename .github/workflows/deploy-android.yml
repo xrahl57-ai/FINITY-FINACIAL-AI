@@ -16,73 +16,103 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Java JDK 17 (Required for modern Android builds and Gradle)
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-          cache: 'gradle'
-
-      # Step 3: Set up Node.js environment
-      - name: Set up Node.js
+      # Step 2: Set up Node.js environment
+      - name: Set up Node.js (Latest v20)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      # Step 4: Install Node.js dependencies
+      # Step 3: Install Web Dependencies
       - name: Install Web Dependencies
-        run: npm ci
+        run: |
+          echo "Installing Node.js dependencies..."
+          npm ci || npm install
 
-      # Step 5: Build React/Vite assets
+      # Step 4: Build Web Production Assets
       - name: Build Web Production Assets
-        run: npm run build
+        run: |
+          echo "Running production web build..."
+          npm run build
 
-      # Step 6: Sync Capacitor / Cordova Android assets (if available)
+      # Step 5: Verify Web Build Artifacts
+      - name: Verify Web Build Output
+        run: |
+          echo "Verifying web assets generation..."
+          if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then
+            echo "::error::Web build did not produce 'dist/index.html'. Check build logs."
+            exit 1
+          fi
+          echo "Success: Web build artifacts are valid."
+
+      # Step 6: Verify Android Directory Structure
+      - name: Verify Android & Gradle Infrastructure
+        run: |
+          echo "Verifying Android folder and Gradle configurations..."
+          if [ ! -d "android" ]; then
+            echo "::error::Android directory ('android') not found. Native project is missing."
+            exit 1
+          fi
+          if [ ! -f "android/gradlew" ]; then
+            echo "::error::Gradle wrapper ('android/gradlew') not found. Gradle setup is incomplete."
+            exit 1
+          fi
+          echo "Success: Android directory and Gradle wrapper exist."
+
+      # Step 7: Sync Web Assets to Android WebView
       - name: Sync Mobile Platform Assets
         run: |
-          if [ -f "capacitor.config.json" ] || [ -f "capacitor.config.ts" ]; then
-            echo "Capacitor configuration found. Running Capacitor Sync..."
-            npx cap sync android
-          else
-            echo "No Capacitor/Cordova configuration detected. Assuming standalone Android project exists in 'android' directory."
-          fi
+          echo "Syncing compiled web files with Capacitor Android container..."
+          npx cap sync android
 
-      # Step 7: Build Android APK using Gradle Wrapper
+      # Step 8: Set up Java JDK 17 (Required for modern Android Gradle Builds)
+      # Note: We do NOT use 'cache: gradle' here to avoid the root-level "No file matched" cache resolution failure.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Step 9: Set up Gradle Action with Subdirectory Configuration
+      # This handles optimal caching of Gradle dependencies using the correct build directory.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-root-directory: android
+
+      # Step 10: Build Android Release APK
       - name: Build Android Release APK
         run: |
-          if [ -d "android" ]; then
-            cd android
-            chmod +x gradlew
-            ./gradlew assembleRelease --no-daemon
-          elif [ -f "gradlew" ]; then
-            chmod +x gradlew
-            ./gradlew assembleRelease --no-daemon
+          echo "Starting native Gradle release build..."
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      # Step 11: Locate and Verify Release APK Output
+      - name: Locate and Verify Output APKs
+        run: |
+          echo "Locating built APK files..."
+          APK_DIR="android/app/build/outputs/apk/release"
+          if [ -d "$APK_DIR" ]; then
+            echo "APKs found in release directory:"
+            ls -la "$APK_DIR"
+            
+            # Check for APK presence
+            APK_COUNT=$(find "$APK_DIR" -name "*.apk" | wc -l)
+            if [ "$APK_COUNT" -eq 0 ]; then
+              echo "::error::No .apk files found in '$APK_DIR' despite successful Gradle build."
+              exit 1
+            fi
           else
-            echo "::warning::Neither 'android' directory nor root Gradle wrapper found. Skipping Gradle build stage."
-            echo "To fix this, add the Android platform to your workspace (e.g. 'npx cap add android' or init a standard Android Gradle project)."
+            echo "::error::Expected output directory '$APK_DIR' does not exist."
+            exit 1
           fi
 
-      # Step 8: Sign Android App (Optional - If Signing Keys are provided in secrets)
-      - name: Sign Release APK (Optional)
-        if: env.ANDROID_SIGNING_KEY != null
-        env:
-          ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_ALIAS: ${{ secrets.ANDROID_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          echo "Signing release APK..."
-          # Insert signing commands or jarsigner calls here if signing variables are configured
-
-      # Step 9: Archive and Upload Built APKs as Artifacts
+      # Step 12: Archive and Upload Built APK as Artifact
       - name: Upload Android Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: finity-agent-release-apk
-          path: |
-            android/app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/release/*.apk
-          if-no-files-found: warn
+          name: Finity-Android-APK
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
           retention-days: 7

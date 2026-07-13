@@ -1,0 +1,5 @@
+{
+	"appId": "com.finity.agent",
+	"appName": "Finity Agent",
+	"webDir": "dist"
+}
