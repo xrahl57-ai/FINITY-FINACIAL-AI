@@ -1,0 +1,88 @@
+name: Build & Deploy Android App
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    name: Build Finity Agent Android Application
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Java JDK 17 (Required for modern Android builds and Gradle)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      # Step 3: Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # Step 4: Install Node.js dependencies
+      - name: Install Web Dependencies
+        run: npm ci
+
+      # Step 5: Build React/Vite assets
+      - name: Build Web Production Assets
+        run: npm run build
+
+      # Step 6: Sync Capacitor / Cordova Android assets (if available)
+      - name: Sync Mobile Platform Assets
+        run: |
+          if [ -f "capacitor.config.json" ] || [ -f "capacitor.config.ts" ]; then
+            echo "Capacitor configuration found. Running Capacitor Sync..."
+            npx cap sync android
+          else
+            echo "No Capacitor/Cordova configuration detected. Assuming standalone Android project exists in 'android' directory."
+          fi
+
+      # Step 7: Build Android APK using Gradle Wrapper
+      - name: Build Android Release APK
+        run: |
+          if [ -d "android" ]; then
+            cd android
+            chmod +x gradlew
+            ./gradlew assembleRelease --no-daemon
+          elif [ -f "gradlew" ]; then
+            chmod +x gradlew
+            ./gradlew assembleRelease --no-daemon
+          else
+            echo "::warning::Neither 'android' directory nor root Gradle wrapper found. Skipping Gradle build stage."
+            echo "To fix this, add the Android platform to your workspace (e.g. 'npx cap add android' or init a standard Android Gradle project)."
+          fi
+
+      # Step 8: Sign Android App (Optional - If Signing Keys are provided in secrets)
+      - name: Sign Release APK (Optional)
+        if: env.ANDROID_SIGNING_KEY != null
+        env:
+          ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_ALIAS: ${{ secrets.ANDROID_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "Signing release APK..."
+          # Insert signing commands or jarsigner calls here if signing variables are configured
+
+      # Step 9: Archive and Upload Built APKs as Artifacts
+      - name: Upload Android Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: finity-agent-release-apk
+          path: |
+            android/app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+          retention-days: 7

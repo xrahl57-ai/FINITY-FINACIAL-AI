@@ -198,7 +198,7 @@ export default function NeonHealthRail({ state, onTabChange, onSelectReport }: N
 
       {/* Vertical List of Neon Circles */}
       <div className="flex-1 flex flex-col justify-around w-full py-2 z-10">
-        {circles.map((circle) => {
+        {circles.map((circle, idx) => {
           const isHovered = hoveredCircle === circle.id;
           return (
             <div 
@@ -209,6 +209,9 @@ export default function NeonHealthRail({ state, onTabChange, onSelectReport }: N
             >
               {/* Glowing Neon Circle Trigger */}
               <motion.button
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 220, damping: 18, delay: idx * 0.08 }}
                 whileHover={{ scale: 1.12 }}
                 whileTap={{ scale: 0.95 }}
                 className={`w-12 h-12 rounded-full flex flex-col items-center justify-center transition-all duration-300 relative ${circle.neonClass}`}
@@ -237,9 +240,9 @@ export default function NeonHealthRail({ state, onTabChange, onSelectReport }: N
               <AnimatePresence>
                 {isHovered && (
                   <motion.div
-                    initial={{ opacity: 0, x: -15, scale: 0.95 }}
+                    initial={{ opacity: 0, x: 15, scale: 0.95 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: -15, scale: 0.95 }}
+                    exit={{ opacity: 0, x: 15, scale: 0.95 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
                     className="absolute right-[88px] top-1/2 -translate-y-1/2 w-72 bg-card-bg border border-brand-gold/25 rounded-2xl shadow-2xl p-4 z-50 text-left pointer-events-none"
                     style={{

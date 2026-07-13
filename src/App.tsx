@@ -37,6 +37,7 @@ import { FinityState, AccountType } from "./types";
 // Import modular components
 import FinityAgentConsole from "./components/FinityAgentConsole";
 import NeonHealthRail from "./components/NeonHealthRail";
+import CommandPalette from "./components/CommandPalette";
 import DashboardOverview from "./components/DashboardOverview";
 import LedgerTable from "./components/LedgerTable";
 import Invoicing from "./components/Invoicing";
@@ -53,6 +54,7 @@ export default function App() {
   const [activeReportId, setActiveReportId] = useState("bs");
   const [isLoading, setIsLoading] = useState(true);
   const [isConsoleOpen, setIsConsoleOpen] = useState(true);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -114,6 +116,17 @@ export default function App() {
 
   useEffect(() => {
     fetchState();
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const handleStateUpdate = (newState: FinityState) => {
@@ -637,6 +650,20 @@ export default function App() {
               {isDarkMode ? <Sun size={15} /> : <Moon size={15} />}
             </button>
 
+            {/* Command Palette Trigger Button */}
+            <button
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="flex items-center gap-2 bg-hover-bg hover:bg-border-subtle hover:scale-[1.01] px-3.5 py-2 rounded-xl text-xs font-semibold text-text-muted hover:text-text-main border border-border-subtle/80 transition active:scale-95 shadow-sm"
+              title="Open Command Palette (Ctrl+K)"
+              id="cmd-palette-trigger-btn"
+            >
+              <Command size={14} className="text-brand-gold shrink-0" />
+              <span className="hidden sm:inline">Search</span>
+              <kbd className="hidden md:inline-flex h-4 items-center gap-0.5 rounded border border-border-subtle/80 bg-sidebar-bg px-1 font-mono text-[9px] font-bold text-text-muted">
+                <span className="text-[10px]">⌘</span>K
+              </kbd>
+            </button>
+
             {/* AI Toggle Button */}
             <button
               onClick={() => setIsConsoleOpen(!isConsoleOpen)}
@@ -770,6 +797,20 @@ export default function App() {
           )}
         </div>
       </div>
+
+      {/* Command Palette Keyboard Shortcut Overlay */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        isConsoleOpen={isConsoleOpen}
+        onToggleConsole={setIsConsoleOpen}
+        isDarkMode={isDarkMode}
+        onToggleTheme={handleToggleTheme}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={setIsSidebarCollapsed}
+      />
     </div>
   );
 }
