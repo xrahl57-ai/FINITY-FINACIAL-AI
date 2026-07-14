@@ -55,9 +55,10 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
   // Steps tracking (0 to 9)
   const [currentStep, setCurrentStep] = useState<number>(() => {
     const saved = localStorage.getItem("finity-onboarding-step");
-    const step = saved ? parseInt(saved, 10) : 1;
-    return step === 0 ? 1 : step;
+    if (saved) return parseInt(saved, 10);
+    return 0; // Start at step 0 to choose path
   });
+  console.log("OnboardingWizard rendered, step:", currentStep);
 
   // State for all collected onboarding data
   const [formData, setFormData] = useState(() => {

@@ -519,6 +519,7 @@ export default function App() {
 
   if (!state.isOnboarded) {
     if (isOnboardingWizardActive) {
+      console.log("Rendering OnboardingWizard");
       return (
         <div className={isDarkMode ? "" : "light-theme"}>
           <OnboardingWizard
