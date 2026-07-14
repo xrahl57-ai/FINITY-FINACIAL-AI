@@ -353,6 +353,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
         break;
     }
     
+    console.log("DEBUG: validateStep called for step:", step, "errors:", errors);
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
