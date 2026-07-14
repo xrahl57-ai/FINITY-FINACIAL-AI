@@ -541,7 +541,12 @@ export default function App() {
     } else {
       return (
         <LandingPage
-          onGetStarted={() => setIsOnboardingWizardActive(true)}
+          onGetStarted={() => {
+            localStorage.removeItem("finity-onboarding-type");
+            localStorage.removeItem("finity-onboarding-step");
+            localStorage.removeItem("finity-onboarding-data");
+            setIsOnboardingWizardActive(true);
+          }}
           onLoginSuccess={(newState) => {
             setState(newState);
             setIsOnboardingWizardActive(false);

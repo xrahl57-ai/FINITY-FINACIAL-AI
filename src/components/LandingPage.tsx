@@ -273,6 +273,9 @@ export default function LandingPage({ onGetStarted, onLoginSuccess }: LandingPag
 
       if (!stateData.state || !stateData.state.isOnboarded) {
         // Force onboarding if not onboarded
+        localStorage.removeItem("finity-onboarding-type");
+        localStorage.removeItem("finity-onboarding-step");
+        localStorage.removeItem("finity-onboarding-data");
         setStartingOnboarding(true);
         setTimeout(() => {
           onGetStarted();
@@ -292,6 +295,9 @@ export default function LandingPage({ onGetStarted, onLoginSuccess }: LandingPag
 
   // Trigger high fidelity loading screen before wizard starts
   const handleGetStartedClick = () => {
+    localStorage.removeItem("finity-onboarding-type");
+    localStorage.removeItem("finity-onboarding-step");
+    localStorage.removeItem("finity-onboarding-data");
     setStartingOnboarding(true);
     setTimeout(() => {
       onGetStarted();

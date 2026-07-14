@@ -46,18 +46,22 @@ interface OnboardingWizardProps {
 }
 
 export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWizardProps) {
-  // Main path state: "business" or "personal" or "choose"
   const [onboardingType, setOnboardingType] = useState<"choose" | "business" | "personal">(() => {
     const saved = localStorage.getItem("finity-onboarding-type");
-    return (saved as "choose" | "business" | "personal") || "choose";
+    const val = (saved as "choose" | "business" | "personal") || "choose";
+    console.log("DEBUG: Initial onboardingType:", val);
+    return val;
   });
 
   // Steps tracking (0 to 9)
   const [currentStep, setCurrentStep] = useState<number>(() => {
     const saved = localStorage.getItem("finity-onboarding-step");
-    if (saved) return parseInt(saved, 10);
-    return 0; // Start at step 0 to choose path
+    const step = saved ? parseInt(saved, 10) : 0;
+    console.log("DEBUG: Initial currentStep:", step);
+    return step;
   });
+
+  console.log("DEBUG: Rendering OnboardingWizard. currentStep:", currentStep, "onboardingType:", onboardingType);
   console.log("OnboardingWizard rendered, step:", currentStep);
 
   // State for all collected onboarding data
