@@ -358,6 +358,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
   };
 
   const handleNext = () => {
+    console.log("DEBUG: handleNext clicked. currentStep:", currentStep, "validateStep:", validateStep(currentStep));
     if (validateStep(currentStep)) {
       if (onboardingType === "personal") {
         if (currentStep === 1) {
@@ -369,6 +370,8 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
       } else {
         setCurrentStep(prev => prev + 1);
       }
+    } else {
+      console.log("DEBUG: validation failed. errors:", validationErrors);
     }
   };
 
