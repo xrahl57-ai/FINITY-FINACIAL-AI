@@ -311,9 +311,6 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
         if (formData.account.password !== formData.account.confirmPassword) {
           errors.confirmPassword = "Passwords do not match";
         }
-        if (!formData.account.isVerified && formData.account.workEmail) {
-          errors.emailVerification = "Please verify your work email address to proceed securely";
-        }
         break;
 
       case 2: // Company Info
@@ -353,13 +350,11 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
         break;
     }
     
-    console.log("DEBUG: validateStep called for step:", step, "errors:", errors);
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleNext = () => {
-    console.log("DEBUG: handleNext clicked. currentStep:", currentStep, "validateStep:", validateStep(currentStep));
     if (validateStep(currentStep)) {
       if (onboardingType === "personal") {
         if (currentStep === 1) {
@@ -371,8 +366,6 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
       } else {
         setCurrentStep(prev => prev + 1);
       }
-    } else {
-      console.log("DEBUG: validation failed. errors:", validationErrors);
     }
   };
 
@@ -868,7 +861,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                         Confirm
                       </button>
                     </div>
-                    {validationErrors.emailVerification && <p className="text-[10px] text-brand-red font-medium">{validationErrors.emailVerification}</p>}
+
                   </motion.div>
                 )}
 
