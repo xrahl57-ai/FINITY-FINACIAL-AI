@@ -180,15 +180,6 @@
     "KES": 0.0078
   },
   "isOnboarded": true,
-  "personalProfile": {
-    "name": "Rahl",
-    "country": "Kenya",
-    "currency": "KES",
-    "timezone": "Africa/Nairobi",
-    "language": "English (KE)",
-    "goals": "Expense Tracking & Wealth Management",
-    "onboardedAt": "2026-07-12T11:48:14.510Z"
-  },
   "companyProfile": {
     "name": "Finity Kenya Ltd",
     "legalName": "Finity Kenya Limited",

@@ -24,6 +24,8 @@ import {
   ArrowDownRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../lib/firebase';
 import { FinityState } from "../types";
 
 // ==========================================
@@ -56,7 +58,7 @@ export function Logo({ size = "md", animate = true }: { size?: "sm" | "md" | "lg
 
   return (
     <div className={`flex items-center ${containerClasses} select-none`} id="finity-logo-component">
-      {/* Elegant gold "F" symbol with a small sparkle/star element */}
+      {/* Elegant generated logo */}
       <motion.div
         animate={animate ? {
           boxShadow: [
@@ -66,21 +68,14 @@ export function Logo({ size = "md", animate = true }: { size?: "sm" | "md" | "lg
           ]
         } : {}}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className={`${logoBoxClasses} bg-gradient-to-br from-[#E5C158] via-[#B89742] to-[#8C6D23] border border-amber-300/30 flex items-center justify-center text-slate-950 font-sans font-black tracking-tighter relative shadow-lg shadow-amber-500/10`}
+        className={`${logoBoxClasses} border border-amber-300/30 flex items-center justify-center font-sans font-black tracking-tighter relative shadow-lg shadow-amber-500/10 overflow-hidden`}
       >
-        <span>F</span>
-        {/* Sparkle star element */}
-        <motion.div
-          animate={animate ? {
-            scale: [0.8, 1.2, 0.8],
-            opacity: [0.6, 1, 0.6],
-            rotate: [0, 90, 180, 270, 360]
-          } : {}}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-1 -right-1 text-yellow-200"
-        >
-          <Sparkles size={size === "lg" ? 14 : 10} className="fill-current" />
-        </motion.div>
+        <img 
+          src="/src/assets/images/finity_logo_1784015981020.jpg" 
+          alt="Finity OS Logo" 
+          className="w-full h-full object-cover"
+          referrerPolicy="no-referrer"
+        />
       </motion.div>
 
       <div className="flex flex-col text-left">
@@ -268,26 +263,30 @@ export default function LandingPage({ onGetStarted, onLoginSuccess }: LandingPag
     setLoginError("");
 
     try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      console.log("Logged in user:", user.email);
+
+      // Check existing state/onboarding via API
       const stateRes = await fetch("/api/state");
       const stateData = await stateRes.json();
 
       if (!stateData.state || !stateData.state.isOnboarded) {
+        // Force onboarding if not onboarded
+        setStartingOnboarding(true);
         setTimeout(() => {
+          onGetStarted();
           setGoogleLoading(false);
-          setLoginError("No onboarded workspace found. Please click 'Get Started' to complete the Secure Onboarding Wizard.");
-        }, 800);
+        }, 1800);
         return;
       }
 
       // If onboarded, log in as verified user
-      setTimeout(() => {
-        setGoogleLoading(false);
-        onLoginSuccess(stateData.state);
-      }, 1000);
-
-    } catch (err) {
+      onLoginSuccess(stateData.state);
       setGoogleLoading(false);
-      setLoginError("Google Sign-In integration error. Please try again.");
+    } catch (err: any) {
+      setGoogleLoading(false);
+      setLoginError(err.message || "Google Sign-In integration error. Please try again.");
     }
   };
 

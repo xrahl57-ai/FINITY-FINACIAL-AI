@@ -161,7 +161,7 @@ export default function App() {
       ],
       activePayments: [],
       exchangeRates: { "USD": 1.0, "EUR": 1.08, "GBP": 1.28, "CAD": 1.38, "AUD": 1.51 },
-      isOnboarded: true, // Auto-onboard local offline mode to give instant utility
+      isOnboarded: false, // Default to false so user gets to experience onboarding
       companyProfile: {
         name: "Finity Offline Workspace",
         legalName: "Finity Local Systems Ltd",
@@ -200,7 +200,7 @@ export default function App() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
-    }, 4500); // 4.5s connection timeout
+    }, 15000); // 15s connection timeout
 
     try {
       const response = await fetch("/api/state", { signal: controller.signal });
@@ -225,7 +225,7 @@ export default function App() {
       console.log("[Finity OS] Connection successful. Financial ledger state synced.");
     } catch (err: any) {
       clearTimeout(timeoutId);
-      const errMsg = err.name === "AbortError" ? "Connection timeout (4500ms exceeded)" : String(err.message || err);
+      const errMsg = err.name === "AbortError" ? "Connection timeout (15000ms exceeded)" : String(err.message || err);
       console.warn(`[Finity OS] API Connection unsuccessful: ${errMsg}. Initiating offline session restoration...`);
       setConnectionError(errMsg);
 
@@ -297,14 +297,45 @@ export default function App() {
     if (!window.confirm("Are you sure you want to reset your Finity workspace registration and restart the onboarding wizard? This will clear current cost-centers and settings.")) {
       return;
     }
-    try {
-      const response = await fetch("/api/state/reset-onboard", { method: "POST" });
-      const data = await response.json();
-      setState(data.state || data);
+    
+    // Clear local storage backup
+    localStorage.removeItem("finity-local-state");
+
+    if (isOfflineMode) {
+      const freshSeed: FinityState = {
+        ...state,
+        isOnboarded: false,
+        companyProfile: undefined,
+        personalProfile: undefined,
+        userCredentials: undefined
+      };
+      setState(freshSeed);
+      localStorage.setItem("finity-local-state", JSON.stringify(freshSeed));
       setIsOnboardingWizardActive(true);
       setActiveTab("Overview");
-    } catch (err) {
-      console.error("Error resetting onboarding:", err);
+    } else {
+      try {
+        const response = await fetch("/api/state/reset-onboard", { method: "POST" });
+        const data = await response.json();
+        const serverState = data.state || data;
+        localStorage.setItem("finity-local-state", JSON.stringify(serverState));
+        setState(serverState);
+        setIsOnboardingWizardActive(true);
+        setActiveTab("Overview");
+      } catch (err) {
+        console.error("Error resetting onboarding:", err);
+        const freshSeed: FinityState = {
+          ...state,
+          isOnboarded: false,
+          companyProfile: undefined,
+          personalProfile: undefined,
+          userCredentials: undefined
+        };
+        setState(freshSeed);
+        localStorage.setItem("finity-local-state", JSON.stringify(freshSeed));
+        setIsOnboardingWizardActive(true);
+        setActiveTab("Overview");
+      }
     }
   };
 
@@ -966,14 +997,14 @@ export default function App() {
                 transition={{ duration: 0.25, ease: "easeInOut" }}
               >
                 {activeTab === "Finity Agent" && (
-                  <div className="flex flex-col lg:flex-row h-[calc(100vh-10rem)] min-h-[500px] rounded-2xl border border-border-subtle bg-sidebar-bg overflow-hidden relative shadow-2xl" id="finity-agent-main-stage">
+                  <div className="flex flex-col h-[calc(100vh-10rem)] min-h-[500px] rounded-2xl border border-border-subtle bg-sidebar-bg overflow-hidden relative shadow-2xl" id="finity-agent-main-stage">
                     {/* Glowing Business Health Neon Circles built directly into the agent page */}
                     <NeonHealthRail 
                       state={state} 
                       onTabChange={setActiveTab} 
                       onSelectReport={setActiveReportId} 
                     />
-                    <div className="flex-1 flex flex-col h-full relative border-l border-border-subtle/40 overflow-hidden bg-sidebar-bg">
+                    <div className="flex-1 flex flex-col h-full relative border-t border-border-subtle/40 overflow-hidden bg-sidebar-bg">
                       <div className="absolute w-[200px] h-[200px] rounded-full bg-brand-gold/3 blur-[80px] top-1/4 right-0 pointer-events-none" />
                       <FinityAgentConsole
                         state={state}
@@ -1035,7 +1066,7 @@ export default function App() {
                 onClick={() => setIsConsoleOpen(false)}
                 id="console-backdrop"
               />
-              <div className="fixed inset-y-0 right-0 z-40 xl:relative xl:inset-auto xl:z-20 w-full max-w-[495px] sm:w-[460px] xl:w-[495px] shrink-0 border-l border-border-subtle flex flex-row h-full bg-sidebar-bg animate-fade shadow-2xl xl:shadow-none" id="right-aside-console">
+              <div className="fixed inset-y-0 right-0 z-40 xl:relative xl:inset-auto xl:z-20 w-full max-w-[495px] sm:w-[460px] xl:w-[495px] shrink-0 border-l border-border-subtle flex flex-col h-full bg-sidebar-bg animate-fade shadow-2xl xl:shadow-none" id="right-aside-console">
                 {/* Floating Close Button for Mobile/Tablet overlay mode */}
                 <button
                   onClick={() => setIsConsoleOpen(false)}
@@ -1054,7 +1085,7 @@ export default function App() {
                 />
 
                 {/* Main Agent Chat Workspace */}
-                <div className="flex-1 flex flex-col h-full relative border-l border-border-subtle/40 overflow-hidden">
+                <div className="flex-1 flex flex-col h-full relative border-t border-border-subtle/40 overflow-hidden">
                   {/* Decorative side accent blur */}
                   <div className="absolute w-[200px] h-[200px] rounded-full bg-brand-gold/3 blur-[80px] top-1/4 right-0 pointer-events-none" />
                   <FinityAgentConsole

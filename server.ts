@@ -671,6 +671,7 @@ function recalculateBalances(state: FinityState) {
 
 // Get current state
 app.get("/api/state", (req, res) => {
+  console.log("DEBUG: /api/state requested");
   const state = readDbState();
   res.json({ state });
 });

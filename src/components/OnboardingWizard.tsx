@@ -49,13 +49,14 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
   // Main path state: "business" or "personal" or "choose"
   const [onboardingType, setOnboardingType] = useState<"choose" | "business" | "personal">(() => {
     const saved = localStorage.getItem("finity-onboarding-type");
-    return (saved as any) || "choose";
+    return (saved as "choose" | "business" | "personal") || "choose";
   });
 
   // Steps tracking (0 to 9)
   const [currentStep, setCurrentStep] = useState<number>(() => {
     const saved = localStorage.getItem("finity-onboarding-step");
-    return saved ? parseInt(saved, 10) : 0;
+    const step = saved ? parseInt(saved, 10) : 1;
+    return step === 0 ? 1 : step;
   });
 
   // State for all collected onboarding data
@@ -346,7 +347,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
       default:
         break;
     }
-
+    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -370,7 +371,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
     if (onboardingType === "personal" && currentStep === 8) {
       setCurrentStep(1);
     } else {
-      setCurrentStep(prev => Math.max(0, prev - 1));
+      setCurrentStep(prev => Math.max(1, prev - 1));
     }
   };
 
@@ -419,8 +420,12 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
           clearInterval(interval);
           setInitializationProgress(100);
           setInitializationLogs(prev => [...prev, "✨ Finity Workspace successfully provisioned and secured! Locking configuration..."]);
-          // Complete onboarding API call
-          saveOnboardingToDatabase();
+          // Complete onboarding API call and advance to Step 9
+          saveOnboardingToDatabase().finally(() => {
+            setTimeout(() => {
+              setCurrentStep(9);
+            }, 1200);
+          });
         }
       }, stepInterval);
 
@@ -2166,7 +2171,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
           {currentStep < 8 && (
             <footer className="mt-8 pt-6 border-t border-border-subtle flex items-center justify-between shrink-0" id="onboarding-wizard-footer">
               <div>
-                {currentStep > 0 && (
+                {currentStep > 1 && (
                   <button
                     type="button"
                     onClick={handleBack}
