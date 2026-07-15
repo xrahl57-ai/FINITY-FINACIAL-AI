@@ -2075,9 +2075,9 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                 {/* Action Card Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                   {/* Action 1: Open Dashboard */}
-                  <div
+                  <button
                     onClick={() => handleFinalRedirect("Overview")}
-                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group"
+                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group w-full"
                     id="success-action-dashboard"
                   >
                     <div className="w-9 h-9 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-3 group-hover:scale-105 transition">
@@ -2087,12 +2087,12 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                     <p className="text-[10px] text-text-muted mt-1 leading-normal">
                       Monitor operational vitals, current ratios, and cash balance positions.
                     </p>
-                  </div>
+                  </button>
 
                   {/* Action 2: Talk to Finity Agent */}
-                  <div
+                  <button
                     onClick={() => handleFinalRedirect("agent")}
-                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group"
+                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group w-full"
                     id="success-action-agent"
                   >
                     <div className="w-9 h-9 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-3 group-hover:scale-105 transition">
@@ -2102,12 +2102,12 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                     <p className="text-[10px] text-text-muted mt-1 leading-normal">
                       Direct the AI agent to draft journals, audit logs, or analyze margins immediately.
                     </p>
-                  </div>
+                  </button>
 
                   {/* Action 3: Record First Transaction */}
-                  <div
+                  <button
                     onClick={() => handleFinalRedirect("Accounts & Ledgers")}
-                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group"
+                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group w-full"
                     id="success-action-record-tx"
                   >
                     <div className="w-9 h-9 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-3 group-hover:scale-105 transition">
@@ -2117,12 +2117,12 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                     <p className="text-[10px] text-text-muted mt-1 leading-normal">
                       Issue manual journal entry records or adjust balance accounts.
                     </p>
-                  </div>
+                  </button>
 
                   {/* Action 4: Connect Bank */}
-                  <div
+                  <button
                     onClick={() => handleFinalRedirect("Banking Hub")}
-                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group"
+                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group w-full"
                     id="success-action-connect-bank"
                   >
                     <div className="w-9 h-9 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-3 group-hover:scale-105 transition">
@@ -2132,12 +2132,12 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                     <p className="text-[10px] text-text-muted mt-1 leading-normal">
                       Sync live commercial checking logs with standard general ledger sync.
                     </p>
-                  </div>
+                  </button>
 
                   {/* Action 5: Invite Team Members */}
-                  <div
+                  <button
                     onClick={() => handleFinalRedirect("Invoicing & Contacts")}
-                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group"
+                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group w-full"
                     id="success-action-team"
                   >
                     <div className="w-9 h-9 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-3 group-hover:scale-105 transition">
@@ -2147,12 +2147,12 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                     <p className="text-[10px] text-text-muted mt-1 leading-normal">
                       Define permission roles or add customer/supplier partners.
                     </p>
-                  </div>
+                  </button>
 
                   {/* Action 6: Generate First Report */}
-                  <div
+                  <button
                     onClick={() => handleFinalRedirect("Financial Statements")}
-                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group"
+                    className="p-4 rounded-xl border border-border-subtle bg-hover-bg/20 hover:border-brand-gold/40 hover:bg-hover-bg/45 transition cursor-pointer text-left group w-full"
                     id="success-action-reports"
                   >
                     <div className="w-9 h-9 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-3 group-hover:scale-105 transition">
@@ -2162,7 +2162,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                     <p className="text-[10px] text-text-muted mt-1 leading-normal">
                       Export balance sheet statements or draft cash flow reviews.
                     </p>
-                  </div>
+                  </button>
                 </div>
               </motion.div>
             )}
