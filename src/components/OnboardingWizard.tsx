@@ -2164,6 +2164,15 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                     </p>
                   </button>
                 </div>
+
+                <div className="pt-8">
+                  <button
+                    onClick={() => handleFinalRedirect("Overview")}
+                    className="w-full py-3 px-6 bg-brand-gold text-white font-bold rounded-xl hover:bg-brand-gold/90 transition text-sm"
+                  >
+                    Finish Setup & Go to Dashboard
+                  </button>
+                </div>
               </motion.div>
             )}
 
