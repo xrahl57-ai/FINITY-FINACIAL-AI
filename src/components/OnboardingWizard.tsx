@@ -474,7 +474,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
     localStorage.removeItem("finity-onboarding-data");
 
     // Fetch state again via callback
-    fetch("/api/state")
+    fetch("/api/state", { cache: "no-cache" })
       .then(res => res.json())
       .then(data => {
         console.log("DEBUG: /api/state fetched:", data);
@@ -2173,7 +2173,10 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
 
                 <div className="pt-8">
                   <button
-                    onClick={() => handleFinalRedirect("Overview")}
+                    onClick={() => {
+                      console.log("DEBUG: Finish button clicked");
+                      handleFinalRedirect("Overview");
+                    }}
                     className="w-full py-3 px-6 bg-brand-gold text-white font-bold rounded-xl hover:bg-brand-gold/90 transition text-sm pointer-events-auto"
                   >
                     Finish Setup & Go to Dashboard

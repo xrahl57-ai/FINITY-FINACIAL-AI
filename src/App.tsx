@@ -524,7 +524,9 @@ export default function App() {
         <div className={isDarkMode ? "" : "light-theme"}>
           <OnboardingWizard
             onOnboardingComplete={(newState, viewAction) => {
-              setState(newState);
+              console.log("DEBUG: onOnboardingComplete called", { newState, viewAction });
+              const finalizedState = { ...newState, isOnboarded: true };
+              setState(finalizedState);
               setIsOnboardingWizardActive(false);
               if (viewAction) {
                 if (viewAction === "agent") {
