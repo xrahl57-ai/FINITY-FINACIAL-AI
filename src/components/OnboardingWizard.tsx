@@ -466,6 +466,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
 
   // Final success action router
   const handleFinalRedirect = (viewAction?: string) => {
+    console.log("DEBUG: handleFinalRedirect clicked with action:", viewAction);
     // We clear localStorage onboarding so they start fresh if they reset, 
     // but the actual onboarded state is written to the server's database file!
     localStorage.removeItem("finity-onboarding-step");
@@ -476,7 +477,11 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
     fetch("/api/state")
       .then(res => res.json())
       .then(data => {
+        console.log("DEBUG: /api/state fetched:", data);
         onOnboardingComplete(data.state || data, viewAction);
+      })
+      .catch(err => {
+        console.error("DEBUG: /api/state fetch error:", err);
       });
   };
 
@@ -2058,6 +2063,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                 className="space-y-8 py-4 text-center"
                 id="step-success-screen"
               >
+                {console.log("DEBUG: Rendering success screen (step 9)")}
                 {/* Success Shield */}
                 <div className="w-16 h-16 rounded-2xl bg-brand-emerald/10 border border-brand-emerald/20 text-brand-emerald flex items-center justify-center mx-auto shadow-md">
                   <CheckCircle size={32} className="animate-pulse" />
@@ -2168,7 +2174,7 @@ export default function OnboardingWizard({ onOnboardingComplete }: OnboardingWiz
                 <div className="pt-8">
                   <button
                     onClick={() => handleFinalRedirect("Overview")}
-                    className="w-full py-3 px-6 bg-brand-gold text-white font-bold rounded-xl hover:bg-brand-gold/90 transition text-sm"
+                    className="w-full py-3 px-6 bg-brand-gold text-white font-bold rounded-xl hover:bg-brand-gold/90 transition text-sm pointer-events-auto"
                   >
                     Finish Setup & Go to Dashboard
                   </button>
