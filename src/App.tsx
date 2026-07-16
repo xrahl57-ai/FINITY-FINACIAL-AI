@@ -528,13 +528,12 @@ export default function App() {
               const finalizedState = { ...newState, isOnboarded: true };
               setState(finalizedState);
               setIsOnboardingWizardActive(false);
-              if (viewAction) {
-                if (viewAction === "agent") {
-                  setIsConsoleOpen(true);
-                  setActiveTab("Finity Agent");
-                } else {
-                  setActiveTab(viewAction);
-                }
+
+              if (viewAction === "agent") {
+                setIsConsoleOpen(true);
+                setActiveTab("Finity Agent");
+              } else if (viewAction) {
+                setActiveTab(viewAction);
               }
             }}
           />
